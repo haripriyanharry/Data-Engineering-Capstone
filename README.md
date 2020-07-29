@@ -1,0 +1,3 @@
+# Data-Engineering-Capstone
+
+The intention of this project is to analyze four different datasets of immigration to the United States, airport codes in the US, city demographics and temperature data of the different cities. Project was extracted as dataframes and cleaned using Python pandas into 3 datasets. Data modeling was performed with the immigration as Fact table and other data sets cities, airports, temperature of cities as dimensional tables. Later the cleaned datasets are loaded/staged into AWS Redshift database using S3 buckets. The analysis was done using the Query editor in the AWS Redshift database.
