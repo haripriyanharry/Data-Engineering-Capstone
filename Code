@@ -1,0 +1,133 @@
+
+https://thispointer.com/pandas-4-ways-to-check-if-a-dataframe-is-empty-in-python/
+
+sqls
+select c.total_population,c.state,t.average_temperature from cities c, usa_temperature t
+where c.city=t.city order by c.state limit 5
+
+select count(i.visatype), a.name from immigration i, airports a group by a.name;
+
+select count(i.visatype), a.name from immigration i, airports a where i.visatype='B2' group by a.name;
+
+
+
+
+
+import configparser
+
+
+# CONFIG
+config = configparser.ConfigParser()
+config.read('dwh.cfg')
+
+# DROP TABLES
+
+immigration_table_drop = "DROP TABLE IF EXISTS immigration;"
+airports_table_drop = "DROP TABLE IF EXISTS airports;"
+cities_table_drop = "DROP TABLE IF EXISTS cities;"
+temperature_table_drop = "DROP TABLE IF EXISTS temperature;"
+
+
+# CREATE TABLES
+
+immigration_table_create = ("""
+    create table immigration (
+cicid int8,
+i94yr int8,
+i94mon int8,
+i94cit int8,
+i94res int8,
+i94port varchar,
+i94mode int8,
+i94addr varchar,
+i94bir int8,
+i94visa int8,
+dtadfile int8,
+visapost varchar,
+occup varchar,
+entdepa varchar,
+entdepd varchar,
+entdepu varchar,
+matflag varchar,
+biryear int8,
+dtaddto varchar,
+gender varchar,
+insnum varchar,
+airline varchar,
+admnum varchar,
+fltno varchar,
+visatype varchar,
+CONSTRAINT immigration_pkey PRIMARY KEY("cicid")
+)
+""")
+
+
+airports_table_create = ("""
+    CREATE TABLE airports(
+	ident	varchar,
+	type	varchar,
+	name	varchar,
+	continent	varchar,
+	iso_country	varchar,
+	municipality	varchar
+	)
+""")
+
+cities_table_create = ("""
+	CREATE TABLE cities(
+	City varchar,
+	State varchar,
+	Age float,
+	Male_population	float,
+	Female_population	float,
+	Foreign-born	float,
+	Average_household_size float,
+	State_code	varchar SORTKEY PRIMARY KEY,
+	Race	varchar,
+	Count varchar
+)
+""")
+	
+temperature_table_create = ("""
+	CREATE TABLE usa_temperature(
+	Date	DATE DIST SORTKEY PRIMARY KEY,
+	Average_temperature	integer,
+	City	varchar,
+	Country	varchar)
+""")
+
+
+#STAGING TABLES
+
+immigration_table_copy = ("""
+    copy immigration from {data_bucket}
+    credentials 'aws_iam_role={role_arn}'
+    region 'us-east-1' format as CSV {immi_path};
+""").format(data_bucket=config['S3']['CLEANED_DATA'], role_arn=config['IAM_ROLE']['ARN'], immi_path=config['S3']['IMMI_PATH'])
+
+airports_table_copy = ("""
+    copy airports from {data_bucket}
+    credentials 'aws_iam_role={role_arn}'
+    region 'us-east-1' format as CSV {airp_path};
+""").format(data_bucket=config['S3']['CLEANED_DATA'], role_arn=config['IAM_ROLE']['ARN'], airp_path=config['S3']['AIRP_PATH'])
+
+
+cities_table_copy = ("""
+    copy cities from {data_bucket}
+    credentials 'aws_iam_role={role_arn}'
+    region 'us-east-1' format as CSV {citi_path};
+""").format(data_bucket=config['S3']['CLEANED_DATA'], role_arn=config['IAM_ROLE']['ARN'], citi_path=config['S3']['CITI_PATH'])
+
+temperature_table_copy = ("""
+    copy usa_temperature from {data_bucket}
+    credentials 'aws_iam_role={role_arn}'
+    region 'us-east-1' format as CSV {temp_path};
+""").format(data_bucket=config['S3']['CLEANED_DATA'], role_arn=config['IAM_ROLE']['ARN'], temp_path=config['S3']['TEMP_PATH'])
+
+
+
+# QUERY LISTS
+
+create_table_queries = [immigration_table_create, airports_table_create, cities_table_create, temperature_table_create]
+drop_table_queries = [immigration_table_drop, airports_table_drop, cities_table_drop, temperature_table_drop]
+copy_table_queries = [immigration_table_copy, airports_table_copy, cities_table_copy, temperature_table_copy]
